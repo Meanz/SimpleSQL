@@ -62,7 +62,7 @@ public class User extends Table {
     /**
      * Constructor that initializes the User table
      *
-     * @param instance
+     * @param instance An active instance of SimpleSQL
      */
     public User(SimpleSQL instance) {
         //For example if you have a static SQL connection you can save it in a config class
@@ -74,7 +74,7 @@ public class User extends Table {
     /**
      * Get the id of this user
      *
-     * @return
+     * @return The id of this user
      */
     public int getId() {
         return id;
@@ -83,10 +83,46 @@ public class User extends Table {
     /**
      * Set the id of this user
      *
-     * @param id
+     * @param id The id to be set
      */
     public void setId(int id) {
         this.id = id;
+    }
+
+    /**
+     * Get the user float value
+     *
+     * @return The user float value
+     */
+    public float getUserFloatValue() {
+        return userFloatValue;
+    }
+
+    /**
+     * Set the user float value
+     *
+     * @param val The float value to be set
+     */
+    public void setUserFloatValue(float val) {
+        this.userFloatValue = val;
+    }
+
+    /**
+     * Get the username of this user
+     *
+     * @return The username of this user
+     */
+    public String getUsername() {
+        return username;
+    }
+
+    /**
+     * Set the username of this user
+     *
+     * @param username The username to be set
+     */
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     /**

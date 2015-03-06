@@ -15,7 +15,10 @@ import com.meanz.simplesql.util.QueryBuilder;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.sql.SQLException;
 import java.util.HashMap;
+
+import no.hin.dt.oblig3.db.simple.AndroidSQLHelper;
 
 
 /**
@@ -56,13 +59,25 @@ public class SimpleSQL {
     private SQLiteDatabase writeDatabase;
 
     /**
+     * Temporary
+     */
+    private AndroidSQLHelper helper;
+
+    /**
      *
      */
     public SimpleSQL(Context context, String databaseName, int version) {
     }
 
-    public void open() throws SimpleSQLException {
 
+    /**
+     * Open the database
+     *
+     * @throws java.sql.SQLException
+     */
+    public void open() throws SQLException {
+        writeDatabase = helper.getWritableDatabase();
+        readDatabase = helper.getReadableDatabase();
     }
 
     public void close() {

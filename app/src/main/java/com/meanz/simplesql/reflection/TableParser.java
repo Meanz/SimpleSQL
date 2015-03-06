@@ -33,9 +33,10 @@ public class TableParser {
         //Find the table name for this table definition
         TableName tableName = table.getAnnotation(TableName.class);
         if(tableName == null) {
-            throw new SimpleSQLException("No @TableName annotation for table with class name " + table.getName());
+            //throw new SimpleSQLException("No @TableName annotation for table with class name " + table.getName());
         }
-        tableDef.tableName = tableName.value();
+        //Temporary fix TODO: Revise
+        tableDef.tableName = tableName != null ? tableName.value() : table.getSimpleName();
 
         //Parse columns
         tableDef.columns = parseColumns(table.getFields());

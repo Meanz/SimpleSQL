@@ -91,9 +91,10 @@ public abstract class Table {
 
     /**
      * Performs an INSERT on the table
+     *
      * @throws SimpleSQLException
      */
-    public void insert() throws SimpleSQLException {
+    public int insert() throws SimpleSQLException {
         Column[] columns = tableDefinition.columns;
         Column primaryKeyField = tableDefinition.primaryKey;
         ContentValues values = new ContentValues();
@@ -115,10 +116,12 @@ public abstract class Table {
         } catch (IllegalAccessException e) {
             throw new SimpleSQLException("Could not set insert value to " + primaryKeyField.name);
         }
+        return (int) insertId; //TODO: The returned value is a long, once the auto increment id reaches INT.MAX_VALUE, Yes!
     }
 
     /**
      * Delete this row using the pk
+     *
      * @throws SimpleSQLException
      */
     public void delete() throws SimpleSQLException {

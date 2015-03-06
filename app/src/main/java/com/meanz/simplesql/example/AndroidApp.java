@@ -52,6 +52,21 @@ public class AndroidApp extends ActionBarActivity {
             //Create the table
             sql.createTable(User.class);
 
+            //Populate the database with some data
+            User insertUser = new User(Config.SQL);
+            insertUser.setUsername("Meanz");
+            insertUser.setUserFloatValue(5.1f);
+            insertUser.insert(); //Insert's the user into the database and returns the row id
+
+            //Print some information
+            insertUser.printMe();
+
+            //The id is automatically assigned to the primary key when inserted into the database
+            //So it's a nice way to obtain the id of the element you inserted into the table
+            //It can also be retrieved like this
+            //int userId = insertUser.insert(); The function that assigns the value also returns it
+            int userId = insertUser.getId();
+
             //You can load a single object using SimpleSQL.load
             //Provided that the class contains a constructor with one of these two patterns
             //Constructor(SimpleSQL) or Constructor() where the Constructor() pattern assumes
@@ -60,11 +75,11 @@ public class AndroidApp extends ActionBarActivity {
             User user = null;
 
             //Method one
-            user = (User)sql.load(User.class, 5); //sql.load(Table, id)
+            user = (User)sql.load(User.class, userId); //sql.load(Table, id)
 
             //Method two
             user = new User(Config.SQL);
-            user.setId(5);
+            user.setId(userId);
             user.load();
 
             //Loaded!
