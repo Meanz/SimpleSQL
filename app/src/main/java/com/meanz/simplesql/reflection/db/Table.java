@@ -63,11 +63,11 @@ public abstract class Table {
                 //Move through all fields
                 for (Column column : tableDefinition.columns) {
                     if (column.dataType == DataType.INTEGER) {
-                        column.setValue(cursor.getInt(idx++), this);
+                        column.setValue(this, cursor.getInt(idx++));
                     } else if (column.dataType == DataType.REAL) {
-                        column.setValue(cursor.getFloat(idx++), this);
+                        column.setValue(this, cursor.getFloat(idx++));
                     } else if (column.dataType == DataType.TEXT) {
-                        column.setValue(cursor.getString(idx++), this);
+                        column.setValue(this, cursor.getString(idx++));
                     }
                 }
             } else {
@@ -111,7 +111,7 @@ public abstract class Table {
         long insertId = handler.getWriteDatabase().insert(tableDefinition.tableName, null, values);
         try {
             //Hack
-            primaryKeyField.setValue((int) insertId, this);
+            primaryKeyField.setValue(this, (int) insertId);
             System.err.println("INSERT INTO " + tableDefinition.tableName + " VALUES(" + values.toString() + ")");
         } catch (IllegalAccessException e) {
             throw new SimpleSQLException("Could not set insert value to " + primaryKeyField.name);

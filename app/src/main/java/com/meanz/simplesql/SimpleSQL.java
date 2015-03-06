@@ -15,10 +15,7 @@ import com.meanz.simplesql.util.QueryBuilder;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
-import java.sql.SQLException;
 import java.util.HashMap;
-
-import no.hin.dt.oblig3.db.simple.AndroidSQLHelper;
 
 
 /**
@@ -59,38 +56,48 @@ public class SimpleSQL {
     private SQLiteDatabase writeDatabase;
 
     /**
-     * Temporary
+     * Temporary interface to SQLite
      */
     private AndroidSQLHelper helper;
 
     /**
+     * Constructs a new SimpleSQL instance that holds the connection bridge between the
+     * database and SimpleSQL's functionality
      *
+     * @param context      An android Context
+     * @param databaseName The name of the database to connect to
+     * @param version      The version of your database (Can be any real number between -int.MAX_VALUE to int.MAX_VALUE
      */
     public SimpleSQL(Context context, String databaseName, int version) {
+        helper = new AndroidSQLHelper(context, databaseName, version);
     }
-
 
     /**
      * Open the database
      *
-     * @throws java.sql.SQLException
+     * @throws com.meanz.simplesql.exception.SimpleSQLException Never actually throws
      */
-    public void open() throws SQLException {
+    public void open() throws SimpleSQLException {
         writeDatabase = helper.getWritableDatabase();
         readDatabase = helper.getReadableDatabase();
     }
 
+    /**
+     * Closes the database connection
+     */
     public void close() {
-
+        writeDatabase.close();
+        readDatabase.close();
     }
 
     /**
      * Load a single object using id in the WHERE clause
      * This is a somewhat more costly operation than Table.load() since this method uses
      * reflection to automatically invoke the constructors
-     * @param clazz
-     * @param id
-     * @return
+     *
+     * @param clazz The table to load into
+     * @param id    The id from the table to load
+     * @return An instance of the table class
      */
     public Object load(Class<? extends Table> clazz, int id) throws SimpleSQLException {
         //Get the definition
@@ -172,6 +179,8 @@ public class SimpleSQL {
     }
 
     /**
+     * Get's all the id's for the given table
+     *
      * @param clazz
      * @return
      * @throws SimpleSQLException
@@ -198,8 +207,12 @@ public class SimpleSQL {
     }
 
     /**
-     * @param clazz
-     * @return
+     * Get's all the id's for the given table with the given condition
+     *
+     * @param clazz The table to look in
+     * @param key   The key to look for
+     * @param value The value to look for
+     * @return All the returned id's from the table with the given condition
      * @throws SimpleSQLException
      */
     public int[] getRowIdsWhere(Class<? extends Table> clazz, String key, String value) throws SimpleSQLException {
@@ -226,7 +239,7 @@ public class SimpleSQL {
     /**
      * Creates a table from the given Table class
      *
-     * @param clazz
+     * @param clazz The table to create
      * @throws SimpleSQLException
      */
     public void createTable(Class<? extends Table> clazz) throws SimpleSQLException {
