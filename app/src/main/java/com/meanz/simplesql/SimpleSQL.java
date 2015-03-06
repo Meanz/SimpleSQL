@@ -1,8 +1,10 @@
 package com.meanz.simplesql;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.meanz.simplesql.exception.SimpleSQLException;
 import com.meanz.simplesql.reflection.TableParser;
 import com.meanz.simplesql.reflection.db.Column;
 import com.meanz.simplesql.reflection.db.Constraint;
@@ -10,9 +12,11 @@ import com.meanz.simplesql.reflection.db.Table;
 import com.meanz.simplesql.reflection.db.TableDefinition;
 import com.meanz.simplesql.util.QueryBuilder;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 
-import no.hin.dt.oblig3.db.simple.exception.SimpleSQLException;
 
 /**
  * Created by Meanz on 05/03/2015.
@@ -54,19 +58,112 @@ public class SimpleSQL {
     /**
      *
      */
-    public SimpleSQL() {
+    public SimpleSQL(Context context, String databaseName, int version) {
+    }
+
+    public void open() throws SimpleSQLException {
+
+    }
+
+    public void close() {
+
     }
 
     /**
-     *
+     * Load a single object using id in the WHERE clause
+     * This is a somewhat more costly operation than Table.load() since this method uses
+     * reflection to automatically invoke the constructors
+     * @param clazz
+     * @param id
+     * @return
+     */
+    public Object load(Class<? extends Table> clazz, int id) throws SimpleSQLException {
+        //Get the definition
+        TableDefinition definition = getTableDefinition(clazz); //If this fails, it will throw
+
+        //Find constructors
+        Constructor[] constructors = clazz.getConstructors();
+
+        Constructor paramConstructor = null;
+        Constructor emptyConstructor = null;
+
+        for (Constructor constructor : constructors) {
+            Type[] types = constructor.getParameterTypes();
+            if (types.length > 1)
+                continue; //This one does not work
+            if (types.length == 0) {
+                //Don't break, we would preferably use a SimpleSQL constructor
+                emptyConstructor = constructor;
+                continue;
+            }
+            for (int i = 0; i < types.length; i++) {
+                if (types[i] == SimpleSQL.class) {
+                    //This one works
+                    paramConstructor = constructor;
+                    break;
+                }
+            }
+            if (paramConstructor != null)
+                break;
+        }
+
+        if (paramConstructor == null && emptyConstructor == null) {
+            throw new SimpleSQLException("No valid constructors found for table " + definition.tableName);
+        }
+
+        //Prioritize SimpleSQL constructor over empty
+        Table table = null;
+        if (paramConstructor != null) {
+            try {
+                table = (Table) paramConstructor.newInstance(this);
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+                throw new SimpleSQLException(e.getMessage() + " :: for table table " + definition.tableName);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+                throw new SimpleSQLException(e.getMessage() + " :: for table table " + definition.tableName);
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+                throw new SimpleSQLException(e.getMessage() + " :: for table table " + definition.tableName);
+            }
+        } else if (emptyConstructor != null) {
+            try {
+                table = (Table) paramConstructor.newInstance();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+                throw new SimpleSQLException(e.getMessage() + " :: for table table " + definition.tableName);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+                throw new SimpleSQLException(e.getMessage() + " :: for table table " + definition.tableName);
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+                throw new SimpleSQLException(e.getMessage() + " :: for table table " + definition.tableName);
+            }
+        } else {
+            throw new SimpleSQLException("Bad code! @SimpleSQL#load(table, id)");
+        }
+        try {
+            //TODO: Revise, don't think we need the null check
+            if (definition.primaryKey == null) {
+                throw new SimpleSQLException("PrimaryKey for table " + definition.tableName + " is null");
+            }
+            definition.primaryKey.setValue(table, id);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+            throw new SimpleSQLException(e.getMessage() + " :: for table table " + definition.tableName);
+        }
+        table.load();
+        return table;
+    }
+
+    /**
      * @param clazz
      * @return
      * @throws SimpleSQLException
      */
     public int[] getRowIds(Class<? extends Table> clazz) throws SimpleSQLException {
         TableDefinition definition = getTableDefinition(clazz);
-        if(definition.primaryKey == null)
-        {
+        if (definition.primaryKey == null) {
             throw new SimpleSQLException("No primary key for table " + definition.tableName);
         }
         //TODO: We need a system to determine whether the pk is an int or not, and we need an alternative to list rows
@@ -76,8 +173,7 @@ public class SimpleSQL {
         //Try to read the results
         int[] ids = new int[cursor.getCount()];
         cursor.moveToFirst();
-        for(int i=0; i < cursor.getCount(); i++)
-        {
+        for (int i = 0; i < cursor.getCount(); i++) {
             cursor.moveToPosition(i);
             int id = cursor.getInt(cursor.getColumnIndex("_id"));
             ids[i] = id;
@@ -87,26 +183,23 @@ public class SimpleSQL {
     }
 
     /**
-     *
      * @param clazz
      * @return
      * @throws SimpleSQLException
      */
     public int[] getRowIdsWhere(Class<? extends Table> clazz, String key, String value) throws SimpleSQLException {
         TableDefinition definition = getTableDefinition(clazz);
-        if(definition.primaryKey == null)
-        {
+        if (definition.primaryKey == null) {
             throw new SimpleSQLException("No primary key for table " + definition.tableName);
         }
         //TODO: We need a system to determine whether the pk is an int or not, and we need an alternative to list rows
         //TODO: This can be achieved by forcing an id column on the table's, for example
-        Cursor cursor = getReadDatabase().rawQuery("SELECT " + definition.primaryKey.name + " FROM " + definition.tableName + " WHERE " + key + "= ?", new String[] { value });
+        Cursor cursor = getReadDatabase().rawQuery("SELECT " + definition.primaryKey.name + " FROM " + definition.tableName + " WHERE " + key + "= ?", new String[]{value});
 
         //Try to read the results
         int[] ids = new int[cursor.getCount()];
         cursor.moveToFirst();
-        for(int i=0; i < cursor.getCount(); i++)
-        {
+        for (int i = 0; i < cursor.getCount(); i++) {
             cursor.moveToPosition(i);
             int id = cursor.getInt(cursor.getColumnIndex("_id"));
             ids[i] = id;
@@ -147,6 +240,7 @@ public class SimpleSQL {
 
     /**
      * Drops the given table
+     *
      * @param clazz
      * @throws SimpleSQLException
      */

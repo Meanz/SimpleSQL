@@ -5,6 +5,7 @@ import com.meanz.simplesql.annotations.Name;
 import com.meanz.simplesql.annotations.NotNull;
 import com.meanz.simplesql.annotations.PrimaryKey;
 import com.meanz.simplesql.annotations.TableName;
+import com.meanz.simplesql.exception.SimpleSQLException;
 import com.meanz.simplesql.reflection.db.Column;
 import com.meanz.simplesql.reflection.db.Constraint;
 import com.meanz.simplesql.reflection.db.DataType;
@@ -13,8 +14,6 @@ import com.meanz.simplesql.reflection.db.TableDefinition;
 
 import java.lang.reflect.Field;
 import java.util.LinkedList;
-
-import no.hin.dt.oblig3.db.simple.exception.SimpleSQLException;
 
 /**
  * Created by Meanz on 05/03/2015.

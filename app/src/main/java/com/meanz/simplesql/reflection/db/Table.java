@@ -5,9 +5,7 @@ import android.database.Cursor;
 
 import com.meanz.simplesql.SimpleSQL;
 import com.meanz.simplesql.annotations.Ignore;
-
-import no.hin.dt.oblig3.db.simple.exception.SimpleSQLException;
-import no.hin.dt.oblig3.db.simple.reflection.DBColumn;
+import com.meanz.simplesql.exception.SimpleSQLException;
 
 /**
  * Created by Meanz on 05/03/2015.
